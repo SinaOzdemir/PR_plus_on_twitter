@@ -17,106 +17,118 @@ packs<- c("tidyverse","here","patchwork","sjlabelled","ggrepel","viridis","patch
 
 p_load(char = packs)
 
-graphs_path<- here("Graphs","Prelim_analysis_080222")
+graphs_path<- here("Graphs")
 
-data_path<- here("Data","Prelim_results_data")
+data_path<- here("Data","Analysis_data")
 
-data<- readRDS(file = file.path(data_path,"analysis_data_080222.rds"))
-
-# Frequencies -------------------------------------------------------------
-
-account_freq<- data %>% group_by(screen_name) %>% tally()
-
-oop_freq<- data %>%
-  select(screen_name,V301_01_Identity_and_mandate:V301_05_Input_seeking) %>% 
-  pivot_longer(cols = V301_01_Identity_and_mandate:V301_05_Input_seeking, names_to = "object_of_publicity",values_to = "value") %>% 
-  group_by(screen_name,object_of_publicity,value) %>%
-  tally() %>%
-  filter(value == "Yes") %>% rename(oop_freq = n) %>% 
-  drop_na() %>% left_join(.,account_freq,by = "screen_name") %>% 
-  mutate(oop_perc = (oop_freq/n))
+data<- readRDS(file = file.path(data_path,"analysis_data_11042022.rds")) %>% 
+  mutate(across(V301_01_Identity_and_mandate:V401_12_None,~as.integer(as.character(.x)))) %>% 
+  mutate(Actor_type = replace_na(Actor_type, "Agency"),
+         is_reply = replace_na(is_reply, 0))
 
 
-overall_oop_perc_graph<- oop_freq %>%
-  group_by(object_of_publicity) %>%
-  summarise(n = sum(oop_freq),
-            n_perc = (sum(oop_freq)/nrow(data))) %>% 
-  ggplot(aes(x = reorder(object_of_publicity,n_perc), y= n_perc))+
-  geom_bar(aes(fill = n_perc),stat = "identity", position = "dodge")+
-  theme_bw()+
-  coord_flip()+
-  labs(x = "Message type", y = "Percentage",title = "Overall share of message types",subtitle = paste0("N = ", nrow(data)))
+# executive subject communication -----------------------------------------
 
-ggsave(overall_oop_perc_graph,filename = "overall_oop_perc.jpeg",path = graphs_path,bg = "white")  
-# 
-# oop_perc_by_account_graph<- oop_freq %>%
-#   ggplot(aes(x = reorder(screen_name,oop_freq), y = oop_freq))+
-#   geom_bar(aes(fill = object_of_publicity),stat = "identity",position = "stack")+
-#   coord_flip()+
-#   theme_minimal()+
-#   labs(x = "Twitter handle",
-#        y = "Frequency",
-#        title = "Overview of message types by the EU executives")+
-#   guides(fill = guide_legend(title="Message Type"))
-# 
+##TODO: can't find a way to show who other actors are with a publication quality graph....
 
-top_accounts<- oop_freq %>%
-  group_by(object_of_publicity) %>%
-  top_n(n = 2,wt = oop_freq) %>% ggplot(aes(x= n, y = oop_freq))+
-  geom_point(aes(size = oop_freq, color = screen_name),show.legend = F)+
-  geom_text_repel(aes(label = screen_name))+
-  facet_grid(rows =vars(object_of_publicity))+
-  theme_bw()+
-  guides(size = guide_legend("Message type frequency"), color = "none")+
-  labs(title = "Peak accounts by message type", x= "Total number of message",y= "Frequency of message types")
+sop_data<- data %>%
+  select(screen_name,Actor_type,status_id,V201_subject_of_publicity,V202_01_Subjects)
 
-ggsave(top_accounts,filename = "top_accounts_by_message_type.jpeg",path = graphs_path,bg = "white")
 
-output_freq<- data %>%
-  filter(V301_02_Output == "Yes") %>%
-  group_by(Actor_type) %>%
-  tally() %>%
-  rename(oop_output_freq = n)
+sop_data<- sop_data %>% 
+  mutate(V202_01_Subjects = ifelse(grepl(x=V202_01_Subjects,pattern = "us|our|we")&(nchar(V202_01_Subjects)<=3),"Self",V202_01_Subjects))
 
-output_transparency_data<- data %>%
-  filter(V301_02_Output == "Yes") %>%
-  group_by(Actor_type,V201_subject_of_publicity) %>%
-  tally() %>% rename(sop_freq =n) %>% left_join(.,output_freq,by = "Actor_type") %>% 
-  drop_na() %>% mutate(sop_output_perc = (sop_freq/oop_output_freq))
+sop_summary<- sop_data %>% 
+  group_by(V201_subject_of_publicity) %>% 
+  summarise(sop_count = n()/nrow(sop_data))
 
-transparency_overall <- output_transparency_data %>%
-  group_by(V201_subject_of_publicity) %>% summarise(n = sum(sop_output_perc)) %>% 
-  ggplot(aes(x = reorder(V201_subject_of_publicity,-n), y = n))+
-  geom_bar(aes(fill = n), position = "dodge",stat = "identity")+
-  theme_bw()+
-  labs(x = "Mentioned actor type",y = "Percentage", title = "Percentage share of mentioned actors in output messages")
-
-ggsave(transparency_overall,filename = "transparency_overall_perc.jpeg", path = graphs_path,bg = "white")
-# 
-# output_transparency_tile_dta<- output_transparency_data %>%
-#   pivot_wider(id_cols = screen_name,names_from = V201_subject_of_publicity,values_from = sop_output_perc,values_fill = 0) %>% 
-#   pivot_longer(cols = Compound:None,names_to = "actor_type",values_to = "perc")
-# 
-# output_transparency_graph<- output_transparency_tile_dta %>%
-#   ggplot(aes(x = reorder(screen_name,perc),y = reorder(actor_type,perc)))+
-#   geom_tile(aes(fill = perc),color = "grey50")+coord_flip()+
-#   scale_fill_distiller(direction = 1)+
-#   theme_bw()+
-#   labs(x = "Actor type", y = "Screen Name", title = "Percentage share of actor\ntypes in EU executive messages")
-# 
-# 
-# ggsave(output_transparency_graph,filename = "output_transperncy_by_actor.jpeg",path = graphs_path,bg = "white")
-
-peak_transparents<- output_transparency_data %>% 
-  filter(V201_subject_of_publicity %in% c("Self","Compound")) %>% 
+actor_type<- sop_data %>% 
   group_by(Actor_type) %>% 
-  summarise(transparent_messages = sum(sop_freq),
-            transparency_perc = ((sum(sop_freq))/(sum(oop_output_freq)))) %>% 
-  ggplot(aes(x= transparent_messages, y = transparency_perc))+
-  geom_point(aes(color = Actor_type),show.legend = F)+
-  geom_text_repel(aes(label = Actor_type),max.overlaps = 30)+
-  theme_bw()+
-  guides(size = guide_legend("Message type frequency"), color = "none")+
-  labs(title = "Transparency", x= "Total number of message",y= "Percentage share of responsibility reporting")
+  summarise(a_tweet = n())
 
-ggsave(peak_transparents,filename = "peak_transparent_atypes.jpeg",path = graphs_path,bg = "white")
+actor_type_sop_summary<- sop_data %>%
+  group_by(Actor_type,V201_subject_of_publicity) %>% 
+  summarise(sop_count = n()) %>% 
+  left_join(.,actor_type,by = "Actor_type") %>% 
+  mutate(sop_perc = round(sop_count/a_tweet,2)) %>% 
+  mutate(label_y = cumsum(sop_perc) - 0.5 * sop_perc)
+
+sop_graph<- actor_type_sop_summary %>% 
+  ggplot(aes(x = V201_subject_of_publicity, y= sop_perc))+
+  geom_bar(aes(fill = sop_perc),stat="identity",position = "dodge")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle=45,vjust=.7))+
+  facet_wrap(~Actor_type)
+
+# Overall Executive communication -----------------------------------------
+
+overall_oop_freqs<- data %>%
+  select(screen_name,Actor_type,status_id,matches(match = "V301_*"),is_reply) %>% 
+  summarise(iam_perc = (sum(V301_01_Identity_and_mandate)/n()),
+            output_perc = (sum(V301_02_Output)/n()),
+            activity_perc = (sum(V301_03_Activity)/n()),
+            opinion_perc = (sum(V301_04_Opinion)/n()),
+            input_perc = (sum(V301_05_Input_seeking)/n()),
+            other_perc = (sum(V301_06_Other)/n()),
+            reply_perc = (sum(is_reply)/n())) %>% 
+  mutate(across(iam_perc:other_perc, ~round(.x,2))) %>% 
+  pivot_longer(cols = iam_perc:reply_perc,names_to = "object_type",values_to = "percentage") %>% 
+  mutate(com_strat = ifelse(object_type %in% c("iam_perc","output_perc","activity_perc","opinion_perc","other_perc"),"one_way",
+                            ifelse(object_type == "input_perc","two_way_asymetric","two_way_symetric"))) 
+  
+overall_oop_plot<- overall_oop_freqs %>%
+  ggplot(aes(x = reorder(object_type,-percentage),y = percentage,fill = com_strat))+
+  geom_bar(position = "dodge",stat="identity")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 45,hjust = 1,vjust = 1))+
+  scale_fill_brewer(palette = "Dark2",
+                    labels = c("One-way","Two-way asymmetric","Two-way symmetric"),
+                    name = "Communication strategies")+
+  scale_x_discrete(labels = c("output","activity","opinion","other","reply","mandate","input seeking"))+
+  labs(x = "Object of communication", y= "Percentage")
+
+
+ggsave(filename = "overall_oop_plot.jpeg",
+       plot = overall_oop_plot,
+       path = graphs_path,
+       bg = "white",
+       width = 5,
+       height = 6,
+       units = "in")
+
+
+actor_oop_freqs<- data %>%
+  select(screen_name,Actor_type,status_id,matches(match = "V301_*"),is_reply) %>% 
+  group_by(Actor_type) %>% 
+  summarise(iam_perc = (sum(V301_01_Identity_and_mandate)/n()),
+            output_perc = (sum(V301_02_Output)/n()),
+            activity_perc = (sum(V301_03_Activity)/n()),
+            opinion_perc = (sum(V301_04_Opinion)/n()),
+            input_perc = (sum(V301_05_Input_seeking)/n()),
+            other_perc = (sum(V301_06_Other)/n()),
+            reply_perc = (sum(is_reply)/n())) %>% 
+  pivot_longer(cols = iam_perc:reply_perc,names_to = "object_type",values_to = "percentage") %>% 
+  mutate(com_strat = ifelse(object_type %in% c("iam_perc","output_perc","activity_perc","opinion_perc","other_perc"),"one_way",
+                            ifelse(object_type == "input_perc","two_way_asymetric","two_way_symetric")))
+
+
+actor_oop_point<- actor_oop_freqs %>%
+  group_by(object_type) %>% slice_max(n = 3,order_by = percentage) %>% 
+  mutate(object_type = str_remove_all(string = object_type,"_perc")) %>% 
+  ggplot(aes(x=percentage,y=percentage))+
+  geom_point(aes(color = Actor_type,alpha = percentage),size = 3,show.legend = F)+
+  geom_text_repel(aes(label = Actor_type),size = 2,max.overlaps = 30)+
+  scale_color_brewer(palette = "Dark2")+
+  facet_grid(rows = vars(object_type))+
+  theme_bw()
+
+
+ggsave(filename = "actor_oop_point.jpeg",
+       plot = actor_oop_point,
+       path = graphs_path,
+       bg = "white",
+       width = 5,
+       height = 6,
+       units = "in")
+
+rm(list = ls())
