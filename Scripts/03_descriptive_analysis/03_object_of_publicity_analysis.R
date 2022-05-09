@@ -27,39 +27,6 @@ data<- readRDS(file = file.path(data_path,"analysis_data_11042022.rds")) %>%
          is_reply = replace_na(is_reply, 0))
 
 
-# executive subject communication -----------------------------------------
-
-##TODO: can't find a way to show who other actors are with a publication quality graph....
-
-sop_data<- data %>%
-  select(screen_name,Actor_type,status_id,V201_subject_of_publicity,V202_01_Subjects)
-
-
-sop_data<- sop_data %>% 
-  mutate(V202_01_Subjects = ifelse(grepl(x=V202_01_Subjects,pattern = "us|our|we")&(nchar(V202_01_Subjects)<=3),"Self",V202_01_Subjects))
-
-sop_summary<- sop_data %>% 
-  group_by(V201_subject_of_publicity) %>% 
-  summarise(sop_count = n()/nrow(sop_data))
-
-actor_type<- sop_data %>% 
-  group_by(Actor_type) %>% 
-  summarise(a_tweet = n())
-
-actor_type_sop_summary<- sop_data %>%
-  group_by(Actor_type,V201_subject_of_publicity) %>% 
-  summarise(sop_count = n()) %>% 
-  left_join(.,actor_type,by = "Actor_type") %>% 
-  mutate(sop_perc = round(sop_count/a_tweet,2)) %>% 
-  mutate(label_y = cumsum(sop_perc) - 0.5 * sop_perc)
-
-sop_graph<- actor_type_sop_summary %>% 
-  ggplot(aes(x = V201_subject_of_publicity, y= sop_perc))+
-  geom_bar(aes(fill = sop_perc),stat="identity",position = "dodge")+
-  theme_bw()+
-  theme(axis.text.x = element_text(angle=45,vjust=.7))+
-  facet_wrap(~Actor_type)
-
 # Overall Executive communication -----------------------------------------
 
 overall_oop_freqs<- data %>%

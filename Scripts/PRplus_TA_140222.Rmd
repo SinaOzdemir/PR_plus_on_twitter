@@ -1,0 +1,280 @@
+---
+title: "The EU Executives and Public Relations on Twitter"
+subtitle: 
+author: 
+    
+    - Sina Ozdemir
+    - Kristine Graneg
+    - Pieter de Wilde
+    
+date: "14.02.2022"
+output: 
+  ioslides_presentation:
+    incremental: TRUE
+    transition: slower
+    widescreen: yes
+csl: apa.csl
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,fig.height = 7,fig.width = 6,out.height="70%",out.width="70%")
+
+library(here)
+
+graph_path<- here("Graphs","Prelim_analysis_080222")
+```
+
+# Outline
+
+------------------------------------------------------------------------
+
+1.  Motivation
+
+2.  Theory
+
+3.  Data and method
+
+4.  Preliminary results
+
+5.  Concluding remarks
+
+# Point of departure
+
+## Motivation
+
+-   The EU and related matters have been -perhaps irreversibly- politicized[@DeWilde2012]
+
+-   Consequently, there is an increased scrutiny of the EU affairs
+
+-   The EU, especially the executives, have a well documented communication problem [@Meyer1999;@Rauh2019;@Rauh2021]
+
+-   Social media channels bear many promises to elevate some of these problems[@Bossetta2017;@Mergel2013]
+
+-   Main RQ: *"How and to what extend the EU executives employ different public communication strategies on social media?"*
+
+# Theory
+
+## Core-concepts
+
+**Legitimation**: Engaging in nurturing the belief in their claim to rule among relevant audiences [@Tallberg2019;@Weber1978,p.450]
+
+    - Our research question pertains to the relationship between public communication
+    and discursive legitimation
+
+**Public communication strategies**: a set of deliberate and purposive communication activities enacted by a communication agent in the public sphere on behalf of a communication entity to reach established goals that are informed by multiple perspectives [@Werder2020,p.80]
+
+---
+
+-   Three common public communication strategies [@Waters2011;@Suen2006]
+
+    1)  *One-way communication*: Strategy that aims to deliver messages from the organization to the relevant audience
+    2)  *Two-way asymmetric communication*: Strategy that aims to collect opinions and feedback from organization's audience
+    3)  *Two-way symmetric communication*: Strategy that aims to stimulate a bilateral dialogue between the audience and the organization
+
+---
+
+-   Different strategies then can contribute to the legitimacy by establishing and enhancing various aspects of good governance
+
+-   Specifically:
+
+    1)  Good impression: Creating or reinforcing favorable opinion about the organization among the audience
+    2)  Transparency: Creating opportunities to increase openness by reducing the cost of disseminating and access to information
+    3)  Interactivity: Developing better connection with stakeholders
+    4)  Participation: Creating opportunity to give audience and stakeholders a voice in the governance process
+
+---
+
+-   We translate these into the EU literature
+
+|                       | Output legitimacy | Throughput legitimacy | Input legitimacy |
+|-----------------------|:-----------------:|:---------------------:|:----------------:|
+| One-way communication |  Good-impression  |     Transparency      |        \-        |
+| Two-way asymmetric    |        \-         |          \-           |  Interactivity   |
+| Two-way symmetric     |        \-         |          \-           |  Participation   |
+
+
+## Operationalizations:
+
+**One-way communication**:
+
+Content types:
+
+    - Activity reporting: information on the institutions or actors'
+      day-to-day operations such as meetings, travels, handshakes.
+
+    - Output reporting: information, such as policy goals and results,
+      economic growth figures, amount of vaccinated people,
+      information on how to benefit from a policy.
+      
+    - Identity and mandate: information about the mission, mandate,
+      aims and goals of the EU, its institutions and bureaucrats.
+      
+       
+    - Opinion: information on preference or evaluation regarding some policy,
+      activity or situation. Verbs that express a desire whilst portraying
+      the actor as not fully in control of the outcome are indicative of an Opinion
+
+---
+
+**Two-way asymmetric communication**:
+
+    - Input seeking: Messages that announce events or opportunities
+      such as online forms for the stakeholders and
+      broader public to give feedback or express their
+      opinion on political operations of the EU
+       
+    - Mentions: @mentions on tweets to other Twitter users.
+       
+
+**Two-way symmetric communication**:
+
+    - Direct Replies: Replying to other Twitter users
+    - Conversational replies: Replies to other Twitter users under author's post.
+
+## Data and Method
+
+-   Manual content analysis
+
+-   113 verified Twitter accounts of the EU supranational executive institutions and their heads
+
+-   Stratified proportional random sample of tweets (N= 4630) from 01.12.2019 - 31.07.2020
+
+-   About 25% of the sample is currently coded
+
+# Pre-eliminary results
+
+## One-way communication
+
+```{r oop_perc, fig.align='center',out.height="70%",out.width="70%"}
+knitr::include_graphics(path = file.path(graph_path,"overall_oop_perc.jpeg"))
+```
+
+------------------------------------------------------------------------
+
+-   Favorite message types of Executives
+
+```{r oop_by_account,fig.align='center'}
+
+knitr::include_graphics(path = file.path(graph_path,"top_accounts_by_message_type.jpeg"))
+```
+
+## Transparency in communication
+
+-   We also code for mentioned actors in the tweets to gauge transparency in communication
+
+    -   Self: the author of the tweet writes about themselves
+    -   Other actors: the author of the tweet talks about other political and societal actors in their tweet
+    -   Compound: the author of the tweet talks about a set of actors that includes the author in their tweet
+    -   None: No individual or institution is mentioned in the tweet
+
+------------------------------------------------------------------------
+
+-   We specifically focus on output messages and mentioned actors to gauge the transparency
+
+```{r transparency_overall, fig.align='center',out.height= "50%",out.width="50%"}
+
+knitr::include_graphics(path = file.path(graph_path, "transparency_overall_perc.jpeg"))
+```
+
+------------------------------------------------------------------------
+
+```{r sop_by_actor,fig.align='center'}
+knitr::include_graphics(path = file.path(graph_path, "peak_transparent_atypes.jpeg"))
+```
+
+## Two-way communication
+
+```{r sop_Favs, fig.align='center',warning=FALSE}
+knitr::include_graphics(path = file.path(graph_path,"engagement_by_actor_type.jpeg"))
+```
+
+------------------------------------------------------------------------
+
+```{r retweet_network, fig.align='center',warning=FALSE,out.height="120%",out.width="120%"}
+knitr::include_graphics(path = file.path(graph_path,"retweet_network.jpeg"))
+```
+
+## Impact on engagement
+
+We also examine the implications of different communication strategies for the engagement with messages on social media for executives
+
+$$ Engagement_i \approx \beta_0 + \beta_iSoP_i + \beta_iOoP_i$$
+
+-   Engagement: $$ Log(\frac{retweets_i + favorites_i}{followercount_j}) $$
+
+-   SoP: type of actors mentioned in the tweet
+
+-   OoP: type of content in the tweet
+
+------------------------------------------------------------------------
+
+```{r dv_dist, fig.align='center',warning=FALSE}
+knitr::include_graphics(path = file.path(graph_path,"dv_density_plots.jpeg"))
+```
+
+------------------------------------------------------------------------
+
+```{r reg_res, fig.align='center',warning=FALSE,out.height="100%",out.width="100%"}
+knitr::include_graphics(path = file.path(graph_path,"regression_results.jpeg"))
+```
+
+## Conclusions
+
+-   Results from mapping the communication:
+
+    -   One way communication strategy is the bread and butter of the EU executives communication on Twitter
+      
+    -   The executives seem to rely mostly on output legitimacy
+
+    -   In terms of transparency, individually taking responsibility seems rather rare.
+        However, they are happy to report thier agency with their insitutional identity or
+        sharing the credit with everyone involved in the process
+
+    -   Two-way communication strategies are not very popular among the executive actors and institutions.
+    
+    -   When they do employ two-way communication strategy,
+        they seem to prefer the most anodine two-way asymetric communication strategy
+        by mostly retweeting other EU accounts.
+    
+---
+
+- Implication of the communication regarding the engagement:
+
+    - Current communciation strategies seem quite rational 
+    
+    - Normative "ideal" of democratic communication does not seem to pay off with regards to the currency of social media (i.e engagement)
+    
+    
+---
+
+- A few caveats about the results:
+
+    - The distribution of the dependent variable is not perfectly normal, so some results might be slightly biased
+    
+    - Outliers were not excluded in the preliminary analysis.
+    
+    - Operationalization of the dependent variable includes retweets 
+      which may greatly influence the results due to endogenous dynamics of the EUsphere.
+      
+      
+------------------------------------------------------------------------
+
+-   Further analysis ideas:
+
+    -   Extend the analysis to full population of messages
+    -   Conduct a deeper analysis of engagement by including replies and examining diversity of retweeters
+    -   Analyze the time trends in the communication
+    -   Compare the EU executive communication with peers such as national executives and international executives
+    -   Examine interaction effects in different message types and factor in transparency and two-way communication
+
+## References
+
+```{=html}
+<style>
+slides > slide { overflow: scroll; }
+slides > slide:not(.nobackground):after {
+  content: '';
+}
+</style>
+```

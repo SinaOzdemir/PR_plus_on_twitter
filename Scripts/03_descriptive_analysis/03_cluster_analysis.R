@@ -154,26 +154,29 @@ cluster_sum <- obj_clustered %>%
             input = sum(V301_05_Input_seeking),
             other = sum(V301_06_Other),
             reply = sum(is_reply)) %>% 
-  pivot_longer(cols = total:reply, names_to = "variables", values_to = "values")
+  pivot_longer(cols = iam:reply, names_to = "variables", values_to = "values") %>% 
+  mutate(object_share = round((values/total),2)) %>% 
+  mutate(cluster_share = round((total/sum(unique(cluster_sum$total))),2)) %>% 
+  mutate(cluster_n = recode(cluster_n, `1` = "All-in-one",`2` = "Activity-Output", `3`="Non-political",`4`= "Pure-output")) %>% 
+  mutate(variables = recode(variables, iam = "identity-and-mandate"))
 
 cluster_n<- cluster_sum %>%
-  filter(variables == "total") %>% 
-  ggplot(aes(x = cluster_n, y= values))+
-  geom_bar(aes(fill = values),stat = "identity",position = "dodge")+
+  ggplot(aes(x = cluster_n, y= cluster_share))+
+  geom_bar(aes(fill = cluster_share),stat = "identity",position = "dodge")+
   theme_bw()+
-  labs(x = "Clusters", y = "N of tweets in clusters")
+  labs(x = "Clusters", y = "% of share",title = "Percentage share of clusters in the whole sample",subtitle = paste0("N =", sum(unique(cluster_sum$total))))
 
-cluster_insight<- cluster_sum %>% filter(variables != "total") %>% 
-  ggplot(aes(x = variables,y = values))+
-  geom_bar(aes(fill = values),position = "dodge",stat="identity")+
+cluster_insight<- cluster_sum %>% mutate(cluster_counts = paste0(cluster_n," (N = ",total,")")) %>% 
+  ggplot(aes(x = variables,y = object_share))+
+  geom_bar(aes(fill = object_share),position = "dodge",stat="identity")+
   theme_bw()+
-  theme(axis.text.x = element_text(angle = 45,vjust = .7))+
-  labs(x= "object of publicity",y = "count",title = "Cluster content distribution")+
-  facet_grid(cols =  vars(cluster_n))
+  theme(axis.text.x = element_text(angle = 90,vjust = 1))+
+  labs(x= "object of publicity",y = "% share of objects in clusters",title = "Cluster content distribution")+
+  facet_grid(cols =  vars(cluster_counts))
 
 cluster_details<-(dendo+cluster_n)/cluster_insight
 
-ggsave(filename = "cluster_details.jpeg",plot = cluster_insight,path = graph_path,width = 5,height = 6,units = "in",bg = "white")
+ggsave(filename = "cluster_details.jpeg",plot = cluster_details,path = graph_path,width = 5,height = 6,units = "in",bg = "white")
 
 saveRDS(object = obj_clusters,file = here("Results","cluster_results.rds"))
 
@@ -191,10 +194,13 @@ account_cluster<- data%>%
   mutate(Actor_type = replace_na(Actor_type, "Agency")) %>% 
   left_join(.,account_n, by = "Actor_type") %>% 
   mutate(cluster_perc = round((cluster_count/message_count),2)) %>% 
-  ggplot(aes(x = reorder(as.factor(cluster_n),-cluster_perc),y = cluster_perc))+
+  mutate(cluster_n = recode(cluster_n, `1` = "All-in-one",`2` = "Activity-Output", `3`="Non-political",`4`= "Pure-output")) %>% 
+  ggplot(aes(x = cluster_n,y = cluster_perc))+
   geom_bar(aes(fill = cluster_perc),stat = "identity",position="dodge")+
   theme_bw()+
+  theme(axis.text.x = element_text(angle = 90,vjust = 1))+
   labs(x = "Cluster of tweets",y = "% share of clusters")+
   facet_wrap(~Actor_type)
   
 
+ggsave(filename = "actor_cluster.jpeg",plot = account_cluster,path = graph_path,width = 5,height = 6,units = "in",bg = "white")

@@ -138,3 +138,30 @@ bin_log_res_df<- models_res_graph<- models_graph_dat %>%
   mutate(upper = ifelse(is.infinite(upper),0,upper))
 
 saveRDS(bin_log_res_df,file = here("Results","logit_results.rds"))
+
+
+a<- readRDS(here("Results","logit_results.rds"))
+
+a$point_color<- ifelse(a$Estimate>1,1,0)
+
+a$significance<- ifelse(a$`Pr(>|z|)`>=0 & a$`Pr(>|z|)` <=.001,"***",
+                        ifelse(a$`Pr(>|z|)`>=.001 & a$`Pr(>|z|)` <= .05,"**",
+                               ifelse(a$`Pr(>|z|)`>=.05 & a$`Pr(>|z|)` <=.1,"*"," ")))
+
+a$variables<- gsub("_"," ",a$variables)
+
+a$cluster_name<- recode(a$cluster_name,
+                        cluster_1 = "All-in-one",
+                        cluster_2 = "Activity-output",
+                        cluster_3 = "Non-political",
+                        cluster_4 = "Pure-output")
+
+a %>% ggplot(aes(x = variables, y = Estimate))+
+  geom_point(aes(color = as.factor(point_color), size = Estimate))+
+  geom_text(aes(label = significance),nudge_y = 2)+
+  guides(size = "none",color = guide_legend(title="Odds"))+
+  scale_color_manual(labels = c("Negative", "Positive"), values = c("red", "green"))+
+  coord_flip()+
+  theme_bw()+
+  facet_grid(cols = vars(cluster_name))+
+  labs(x = "Account type",y = "Log-odds",caption = "Significance levels: *** = .001, ** = .05, * = .1")
